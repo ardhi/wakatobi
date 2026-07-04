@@ -1,5 +1,9 @@
 # Changes
 
+## 2026-07-04
+
+- [2.22.0] Reorganize projects to reduce boot time
+
 ## 2026-06-29
 
 - [2.21.0] Add ```config.exposeError```

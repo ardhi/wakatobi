@@ -1,6 +1,6 @@
 {
   "name": "waibu",
-  "version": "2.21.0",
+  "version": "2.22.0",
   "description": "Web Framework for Bajo",
   "main": "index.js",
   "scripts": {
@@ -53,7 +53,9 @@
     "waibu-fastify-static": "^2.0.0"
   },
   "devDependencies": {
+    "chai": "^6.2.2",
     "clean-jsdoc-theme": "^4.3.0",
-    "jsdoc-plugin-intersection": "^1.0.4"
+    "jsdoc-plugin-intersection": "^1.0.4",
+    "mocha": "^11.7.6"
   }
 }

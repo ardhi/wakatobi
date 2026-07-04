@@ -99,7 +99,7 @@ async function hook () {
     name: 'waibu:preParsing',
     handler: async function (req, reply) {
       const { importModule } = this.app.bajo
-      const attachIntl = await importModule('waibu:/lib/webapp-scope/attach-intl.js')
+      const { attachIntl } = await importModule('waibu:/lib/webapp.js', { asDefaultImport: false })
       await attachIntl.call(this, this.config.intl.detectors, req, reply)
     }
   }]

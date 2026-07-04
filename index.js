@@ -1,18 +1,14 @@
-import collectRoutePathHandlers from './lib/collect-route-path-handlers.js'
+import replyFrom from '@fastify/reply-from'
 import fastify from 'fastify'
-import handleAppHook from './lib/handle-app-hook.js'
-import routeHook from './lib/webapp-scope/route-hook.js'
-import printRoutes from './lib/print-routes.js'
-import webApp from './lib/web-app.js'
+import { routeHook } from './lib/webapp.js'
+import config from './lib/config.js'
 import sensible from '@fastify/sensible'
 import underPressure from '@fastify/under-pressure'
-import handleForward from './lib/handle-forward.js'
-import handleRedirect from './lib/handle-redirect.js'
-import handleError from './lib/handle-error.js'
-import handleNotFound from './lib/handle-not-found.js'
-import handleHome from './lib/handle-home.js'
 import queryString from 'query-string'
-import decorate from './lib/decorate.js'
+import {
+  notFound, interceptor, writeHtml, redirect, collectWebApps,
+  decorate, download
+} from './lib/helper.js'
 
 /**
  * @typedef TEscapeChars
@@ -25,13 +21,19 @@ import decorate from './lib/decorate.js'
  */
 
 /**
- * Plugin factory
+ * Plugin factory.
+ *
+ * **Never** call this function directly!!! It's only-meant to be called by the {@link https://ardhi.github.io/bajo|Bajo framework} during plugin initialization.
  *
  * @param {string} pkgName - NPM package name
- * @returns {class}
+ * @returns {Waibu} Waibu plugin class
  */
 async function factory (pkgName) {
   const me = this
+  const { fs } = this.app.lib
+  const { get, pick, findIndex, orderBy, isArray, isEmpty, isString } = this.app.lib._
+  const { defaultsDeep, isSet } = this.app.lib.aneka
+  const { eachPlugins } = this.app.bajo
 
   /**
    * Waibu Web Framework plugin for Bajo. This is the main foundation of all web apps attached to
@@ -72,78 +74,19 @@ async function factory (pkgName) {
       super(pkgName, me.app)
 
       /**
-       * @see {@tutorial config}
-       * @type {Object}
+       * @property {TConfig} config - Configuration object
        */
-      this.config = {
-        home: {},
-        server: {
-          host: '127.0.0.1',
-          port: 17845
-        },
-        factory: {
-          trustProxy: true,
-          bodyLimit: 10485760,
-          pluginTimeout: 30000,
-          routerOptions: {
-          }
-        },
-        intl: {
-          detectors: ['qs']
-        },
-        log: {
-          disable: [],
-          defer: false
-        },
-        prefixVirtual: '~',
-        qsKey: {
-          bbox: 'bbox',
-          bboxLatField: 'bboxLatField',
-          bboxLngField: 'bboxLngField',
-          query: 'query',
-          search: 'search',
-          skip: 'skip',
-          page: 'page',
-          limit: 'limit',
-          sort: 'sort',
-          fields: 'fields',
-          lang: 'lang'
-        },
-        paramsCharMap: {},
-        route: {
-          print: true,
-          disabled: []
-        },
-        pageTitleFormat: '%s : %s',
-        siteInfo: {
-          title: 'My Website',
-          orgName: 'My Organization'
-        },
-        cors: {},
-        compress: {},
-        helmet: {},
-        rateLimit: {},
-        multipart: {
-          attachFieldsToBody: true,
-          limits: {
-            parts: 100,
-            fileSize: 10485760
-          }
-        },
-        exposeError: undefined,
-        underPressure: false,
-        forwardOpts: {
-          disableRequestLogging: true,
-          undici: {
-            connections: 128,
-            pipelining: 1,
-            keepAliveTimeout: 60 * 1000,
-            tls: {
-              rejectUnauthorized: false
-            }
-          }
-        }
-      }
+      this.config = config
+
+      /**
+       * Query string parser and stringifier. It is a wrapper of {@link https://www.npmjs.com/package/query-string|query-string} package.
+       *
+       * @property {Object} qs - Query string parser and stringifier
+       * @property {Function} qs.parse - Query string parser
+       * @property {Function} qs.parseUrl - Query string url parser
+       * @property {Function} qs.stringify - Query string stringifier
+       * @property {Function} qs.stringifyUrl - Query string url stringifier
+       */
       this.qs = {
         parse: (item) => {
           return queryString.parse(item, {
@@ -164,10 +107,18 @@ async function factory (pkgName) {
      * @async
      */
     init = async () => {
-      const { isString } = this.app.lib._
-      const { isSet } = this.app.lib.aneka
       if (isString(this.config.log.disable)) this.config.log.disable = [this.config.log.disable]
-      await collectRoutePathHandlers.call(this)
+      // collect route path handlers from all plugins
+      this.routePathHandlers = this.routePathHandlers ?? {}
+      const me = this
+
+      await eachPlugins(async function () {
+        const { ns } = this
+        if (isEmpty(this.routePathHandlers) || !this.routePath) return undefined
+        for (const key of this.routePathHandlers) {
+          me.routePathHandlers[key] = { handler: this.routePath, ns }
+        }
+      })
       if (!isSet(this.config.exposeError)) this.config.exposeError = this.app.bajo.config.env === 'dev'
     }
 
@@ -197,16 +148,18 @@ async function factory (pkgName) {
       await runHook('waibu:afterCreateContext', this.instance)
       await this.instance.register(sensible)
       if (cfg.underPressure) await this.instance.register(underPressure)
-      await handleRedirect.call(this)
-      await handleForward.call(this)
-      await handleAppHook.call(this)
-      await handleError.call(this)
+      await this._handleRedirect()
+      await this._handleForward()
+      await this._handleAppHook()
+      await this._handleError()
       await routeHook.call(this, this.ns)
-      await webApp.call(this)
-      await handleHome.call(this)
-      await handleNotFound.call(this)
+      await this._runWebApps()
+      await this._handleHome()
+      await this._handleFavicon()
+      await this._handleRobotsTxt()
+      await this._handleNotFound()
       await this.instance.listen(cfg.server)
-      if (cfg.route.print) printRoutes.call(this)
+      if (cfg.route.print) this._printRoutes()
     }
 
     /**
@@ -242,6 +195,9 @@ async function factory (pkgName) {
       })
     }
 
+    /**
+     * Getter for escapeChars
+     */
     get escapeChars () {
       return this.constructor.escapeChars
     }
@@ -417,10 +373,6 @@ async function factory (pkgName) {
       return get(this.app[ns], 'config.intl.detectors', []).includes('path')
     }
 
-    notFound = (name, options) => {
-      throw this.error('_notFound', { path: name })
-    }
-
     /**
      * Parse filter found from Fastify's request based on keys set in config object
      *
@@ -580,10 +532,24 @@ async function factory (pkgName) {
       return result
     }
 
+    /**
+     * Decode base64 encoded json string
+     *
+     * @method
+     * @param {string} data - Base64 encoded JSON string
+     * @returns {Object} Decoded JSON object
+     */
     base64JsonDecode = (data = 'e30=') => {
       return JSON.parse(Buffer.from(data, 'base64'))
     }
 
+    /**
+     * Encode JSON object to base64 string
+     *
+     * @method
+     * @param {Object} data - JSON object to encode
+     * @returns {string} Base64 encoded JSON string
+     */
     base64JsonEncode = (data) => {
       return Buffer.from(JSON.stringify(data)).toString('base64')
     }
@@ -620,6 +586,248 @@ async function factory (pkgName) {
       })
       if (result && warning) this.log.warn('routeDisabled%s', path)
       return result
+    }
+
+    // private methods, for internal use only
+    // should be marked as private (???)
+
+    /**
+     * Create route for '/robots.txt'.
+     *
+     * Location of robots.txt file can be found in:
+     * 1. main plugin's file; if not found, then
+     * 2. site attachment; if not found, then
+     * 3. default plugin's file
+     *
+     * @async
+     * @method
+     * @returns {Promise<void>}
+     */
+    _handleRobotsTxt = async () => {
+      if (!this.config.robotsTxt) return
+      const me = this
+      this.instance.get('/robots.txt', async function (req, reply) {
+        // 1. main robots.txt
+        let file = me.app.getPluginFile('main:/robots.txt')
+        // 2. site attachment
+        if (!fs.existsSync(file) && me.app.dobo) {
+          const dir = me.app.getPluginDataDir('dobo')
+          file = `${dir}/attachment/SumbaSite/${get(req, 'site.id')}/file/robots.txt`
+        }
+        // 3. Default
+        if (!fs.existsSync(file)) file = me.app.getPluginFile('waibu:/asset/robots.txt')
+        reply.header('cache-control', 'max-age=86400')
+        return await download.call(me, file, req, reply)
+      })
+    }
+
+    /**
+     * Create route for '/favicon.:ext'
+     *
+     * Location of favicon file can be found in:
+     * 1. main plugin's file; if not found, then
+     * 2. site attachment; if not found, then
+     * 3. static dir of theme; if not found, then
+     * 4. default plugin's file
+     *
+     * @async
+     * @method
+     * @returns {Promise<void>}
+     */
+    _handleFavicon = async () => {
+      if (!this.config.favicon) return
+      const me = this
+      this.instance.get('/favicon.:ext', async function (req, reply) {
+        // 1. main favicon
+        let file = me.app.getPluginFile(`main:/favicon.${req.params.ext}`)
+        // 2. site attachment
+        if (!fs.existsSync(file) && me.app.dobo) {
+          const dir = me.app.getPluginDataDir('dobo')
+          file = `${dir}/attachment/SumbaSite/${get(req, 'site.id')}/file/favicon.${req.params.ext}`
+        }
+        // 3. static dir of theme
+        if (!fs.existsSync(file) && me.app.waibuMpa) {
+          const theme = me.app.waibuMpa.themes.find(item => item.name === get(req, 'theme'))
+          if (theme) file = `${theme.plugin.dir.pkg}/extend/waibuStatic/asset/favicon.${req.params.ext}`
+        }
+        // 4. Default
+        if (!fs.existsSync(file)) file = me.app.getPluginFile('waibu:/asset/favicon.png')
+        reply.header('cache-control', 'max-age=86400')
+        return await download.call(me, file, req, reply)
+      })
+    }
+
+    /**
+     * Create route for '/' to redirect to home path.
+     *
+     * @async
+     * @method
+     * @returns {Promise<void>}
+     */
+    _handleHome = async () => {
+      const me = this
+      this.instance.get('/', async function (req, reply) {
+        const home = req.getSetting('waibu:home', {})
+        if (!home.path) throw me.error('_notFound')
+        home.options = home.options ?? {}
+        home.options.throwError = true
+        if (!home.forward) return reply.redirectTo(home.path, home.options)
+        const opts = defaultsDeep(pick(req, ['params', 'query']), pick(home, ['params', 'query']))
+        return reply.forwardTo(home.path, opts)
+      })
+    }
+
+    /**
+     * Route not found handler.
+     *
+     * @async
+     * @method
+     * @returns {Promise<void>}
+     */
+    _handleNotFound = async () => {
+      const me = this
+      this.instance.setNotFoundHandler(async function (req, reply) {
+        return await notFound.call(me, null, req, reply)
+      })
+    }
+
+    /**
+     * Route error handler.
+     *
+     * @async
+     * @method
+     * @returns {Promise<void>}
+     */
+    _handleError = async () => {
+      const me = this
+
+      this.instance.setErrorHandler(async function (err, req, reply) {
+        if (err.message === '_notFound' || err.statusCode === 404) return await notFound.call(me, err, req, reply)
+        if (err.message === '_redirect' && err.path) return redirect.call(me, err, req, reply)
+        this.log.error(err)
+        const resp = await interceptor.call(me, 'error', err, req, reply)
+        if (resp) return resp
+        const payload = {
+          text: me.app.log.getErrorMessage(err),
+          title: req.t('internalServerError')
+        }
+        return writeHtml.call(me, req, reply, `${me.ns}:/lib/template/500.html`, payload)
+      })
+    }
+
+    /**
+     * Handle redirect. It will decorate reply object with ```redirectTo``` method.
+     *
+     * @async
+     * @method
+     * @param {object} options
+     * @returns {Promise<void>}
+     */
+    _handleRedirect = async (options) => {
+      const me = this
+      this.instance.decorateReply('redirectTo', function (path, options = {}) {
+        return redirect.call(me, { path, options }, null, this)
+      })
+    }
+
+    /**
+     * Handle forward. It will decorate reply object with ```forwardTo``` method.
+     *
+     * @async
+     * @method
+     * @returns {Promise<void>}
+     */
+    _handleForward = async () => {
+      const { defaultsDeep } = this.app.lib.aneka
+      const me = this
+
+      function rewriteHeaders (headers, req) {
+        return {
+          ...headers,
+          'X-Fwd-To': true
+        }
+      }
+
+      const base = `http://${this.config.server.host}:${this.config.server.port}`
+      const options = defaultsDeep({ base }, this.config.forwardOpts)
+      this.instance.register(replyFrom, options)
+      this.instance.decorateReply('forwardTo', function (url, options = {}) {
+        if (url.startsWith('http')) return this.redirectTo(url)
+        this.from(me.routePath(url, options), {
+          rewriteHeaders
+        })
+        return this
+      })
+    }
+
+    /**
+     * Handle app hooks. It will run hooks for each web app and main app.
+     *
+     * @async
+     * @method
+     * @returns {Promise<void>}
+     */
+    _handleAppHook = async () => {
+      const { runHook } = this.app.bajo
+      const hooks = ['onReady', 'onClose', 'preClose', 'onRoute', 'onRegister']
+      const me = this
+      for (const hook of hooks) {
+        me.instance.addHook(hook, async function (...args) {
+          args.push(this)
+          if (['onClose', 'onReady'].includes(hook)) await runHook(`${me.ns}:${hook}`, ...args)
+          else await runHook(`${me.ns}:${hook}`, ...args)
+        })
+      }
+    }
+
+    /**
+     * Print all registered routes.
+     *
+     * @method
+     * @returns {void}
+     */
+    _printRoutes = () => {
+      let items = []
+      this.routes.forEach(r => {
+        const idx = findIndex(items, { url: r.url })
+        if (idx < 0) items.push({ url: r.url, methods: isArray(r.method) ? r.method : [r.method] })
+        else {
+          if (isArray(r.method)) items[idx].methods.push(...r.method)
+          else items[idx].methods.push(r.method)
+        }
+      })
+      items = orderBy(items, ['url'])
+      this.log.trace('loaded%s', this.t('routesL'))
+      items.forEach(item => {
+        this.log.trace('- %s (%s)', item.url, item.methods.join('|'))
+      })
+    }
+
+    /**
+     * Run web applications.
+     *
+     * @async
+     * @method
+     * @returns {Promise<void>}
+     */
+    async _runWebApps () {
+      const { runHook } = this.app.bajo
+      this.webApps = await collectWebApps.call(this)
+      await runHook(`${this.ns}:beforeAppBoot`)
+      // build routes
+      for (const m of this.webApps) {
+        const plugin = this.app[m.ns]
+        await runHook(`${this.ns}.${m.ns}:beforeAppBoot`)
+        this.log.debug('bootApp%s', m.ns)
+        await this.instance.register(async (ctx) => {
+          plugin.webAppCtx = ctx
+          plugin.webAppFactory = m
+          await runHook(`${plugin.ns}:afterCreateContext`, ctx)
+          await m.handler.call(plugin, m.prefix)
+        }, { prefix: m.prefix })
+        await runHook(`${this.ns}.${m.ns}:afterAppBoot`)
+      }
+      await runHook(`${this.ns}:afterAppBoot`)
     }
   }
 
