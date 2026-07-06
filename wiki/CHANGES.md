@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-07-06
+
+- [2.23.0] Update all fastify-family packages to the latest versions
+- [2.23.0] Update documentations
+
 ## 2026-07-04
 
 - [2.22.0] Reorganize projects to reduce boot time

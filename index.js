@@ -13,7 +13,7 @@ import {
 /**
  * @typedef TEscapeChars
  * @type {Object}
- * @memberof Waibu
+ * @global
  * @property {string} &lt;=&lt;
  * @property {string} &gt;=&gt;
  * @property {string} &quot;=&quot;
@@ -36,32 +36,30 @@ async function factory (pkgName) {
   const { eachPlugins } = this.app.bajo
 
   /**
-   * Waibu Web Framework plugin for Bajo. This is the main foundation of all web apps attached to
-   * the system through a route prefix. Those web apps are then build as childrens with
-   * its own fastify's context.
+   * Waibu class definition.
    *
-   * There are currently 3 web apps available:
-   * - {@link https://github.com/ardhi/waibu-static|waibu-static} for static content delivery
-   * - {@link https://github.com/ardhi/waibu-rest-api|waibu-rest-api} for rest api setup
-   * - and {@link https://github.com/ardhi/waibu-mpa|waibu-mpa} for normal multi-page application
+   * This class provides methods and properties for managing web applications, routes, and configurations within the Bajo framework.
+   * You should NOT use this class to create routes etc, instead of that, use
+   * the following webapps to extend your plugin:
    *
-   * You should write your code as the extension of above web apps. Not to this main app.
-   * Unless, of course, if you want to write custom web apps with its own context.
+   * - {@link https://ardhi.github.io/waibu-mpa|waibuMpa} - Provide everything to serve multi-page web applications
+   * - {@link https://ardhi.github.io/waibu-static|waibuStatic} - Provide everything to serve static & virtual files
+   * - {@link https://ardhi.github.io/waibu-api|waibuApi} - Provide everything to serve REST API endpoints
+   *
+   * Only use this class if you want to create your own webapp or if you really need to use the fastify context root directly.
    *
    * @class
    */
   class Waibu extends this.app.baseClass.Base {
     /**
-     * @constant {string[]}
+     * @type {string[]}
      * @default ['onRequest', 'onResponse', 'preParsing', 'preValidation', 'preHandler', 'preSerialization', 'onSend', 'onTimeout', 'onError']
-     * @memberof Waibu
      */
     static hookTypes = ['onRequest', 'onResponse', 'preParsing', 'preValidation', 'preHandler',
       'preSerialization', 'onSend', 'onTimeout', 'onError']
 
     /**
-     * @constant {TEscapeChars}
-     * @memberof Waibu
+     * @type {TEscapeChars}
      */
     static escapeChars = {
       '<': '&lt;',
@@ -74,14 +72,15 @@ async function factory (pkgName) {
       super(pkgName, me.app)
 
       /**
-       * @property {TConfig} config - Configuration object
+       * Configuration object. To override the default configuration, you can create `data/config/waibu.json`
+       * @type {TConfig}
        */
       this.config = config
 
       /**
        * Query string parser and stringifier. It is a wrapper of {@link https://www.npmjs.com/package/query-string|query-string} package.
        *
-       * @property {Object} qs - Query string parser and stringifier
+       * @type {Object}
        * @property {Function} qs.parse - Query string parser
        * @property {Function} qs.parseUrl - Query string url parser
        * @property {Function} qs.stringify - Query string stringifier
@@ -175,6 +174,7 @@ async function factory (pkgName) {
     /**
      * Find route by route name
      *
+     * @method
      * @param {string} name - ns based route name
      * @returns {Object} Route object
      */
@@ -195,9 +195,6 @@ async function factory (pkgName) {
       })
     }
 
-    /**
-     * Getter for escapeChars
-     */
     get escapeChars () {
       return this.constructor.escapeChars
     }
@@ -280,6 +277,7 @@ async function factory (pkgName) {
     /**
      * Get hostname from fastify's request object
      *
+     * @method
      * @param {Object} req
      * @returns {string}
      */
@@ -392,6 +390,7 @@ async function factory (pkgName) {
     /**
      * Get route directory by plugin's name
      *
+     * @method
      * @param {*} ns - Namespace
      * @param {*} [baseNs] - Base namespace. If not provided, defaults to scope's ns
      * @returns {string}

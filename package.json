@@ -1,6 +1,6 @@
 {
   "name": "waibu",
-  "version": "2.22.0",
+  "version": "2.23.0",
   "description": "Web Framework for Bajo",
   "main": "index.js",
   "scripts": {
@@ -42,14 +42,14 @@
     "@fastify/flash": "^6.0.3",
     "@fastify/formbody": "^8.0.2",
     "@fastify/helmet": "^13.0.2",
-    "@fastify/multipart": "^9.3.0",
+    "@fastify/multipart": "^9.4.0",
     "@fastify/rate-limit": "^10.3.0",
-    "@fastify/reply-from": "^12.5.0",
+    "@fastify/reply-from": "^12.6.2",
     "@fastify/sensible": "^6.0.4",
     "@fastify/session": "^11.1.1",
     "@fastify/under-pressure": "^9.0.3",
-    "fastify": "^5.6.2",
-    "query-string": "^9.3.1",
+    "fastify": "^5.10.0",
+    "query-string": "^9.4.1",
     "waibu-fastify-static": "^2.0.0"
   },
   "devDependencies": {

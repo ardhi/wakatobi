@@ -1,6 +1,8 @@
 ![Waibu Web Framework](static/logo.png)
 
-### Waibu Web Framework for [Bajo](https://github.com/ardhi/bajo)
+# waibu
+
+Web Framework for [Bajo](https://github.com/ardhi/bajo)
 
 ## Applications
 
