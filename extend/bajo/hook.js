@@ -14,19 +14,24 @@ const stateColor = {
 }
 
 /**
+ * @external THook
+ * @see {@link https://ardhi.github.io/bajo/docs/module-Hook.html#~THook|Bajo.THook}
+ */
+
+/**
  * @async
  * @memberof module:Hook
- * @callback waibuOnCloseHandler
+ * @callback onCloseHandler
  */
 
 /**
  * Hook object for the 'waibu:onClose' event. The handler is invoked when the server is closed and logs a message indicating that the server has been closed.
  *
- * @type {TBajoHook}
+ * @type {external:THook}
  * @memberof module:Hook
  * @name waibu:onClose
  * @property {string} [name='waibu:onClose'] - The name of the hook
- * @property {waibuOnCloseHandler} handler - The handler function for the hook
+ * @property {onCloseHandler} handler - The handler function for the hook
  */
 const waibuOnClose = {
   name: 'waibu:onClose',
@@ -38,16 +43,16 @@ const waibuOnClose = {
 /**
  * @async
  * @memberof module:Hook
- * @callback waibuOnReadyHandler
+ * @callback onReadyHandler
  */
 
 /**
  * Hook object for the 'waibu:onReady' event. The handler is invoked when the server is ready and logs a message indicating that the server is ready.
  *
- * @type {TBajoHook}
+ * @type {external:THook}
  * @memberof module:Hook
  * @property {string} [name='waibu:onReady'] - The name of the hook
- * @property {waibuOnReadyHandler} handler - The handler function for the hook
+ * @property {onReadyHandler} handler - The handler function for the hook
  * @name waibu:onReady
  */
 const waibuOnReady = {
@@ -60,18 +65,18 @@ const waibuOnReady = {
 /**
  * @async
  * @memberof module:Hook
- * @callback waibuOnRequestHandler
+ * @callback onRequestHandler
  * @param {object} req - The request object
  * @param {object} reply - The reply object
  */
 /**
  * Hook object for the 'waibu:onRequest' event. The handler is invoked when a request is received and logs the request details, including the method, URL, and IP address.
  *
- * @type {TBajoHook}
+ * @type {external:THook}
  * @memberof module:Hook
  * @property {number} [level=5] - The level of the hook
  * @property {string} [name='waibu:onRequest'] - The name of the hook
- * @property {waibuOnRequestHandler} handler - The handler function for the hook
+ * @property {onRequestHandler} handler - The handler function for the hook
  * @name waibu:onRequest
  */
 const waibuOnRequest = {
@@ -110,7 +115,7 @@ const waibuOnRequest = {
 }
 
 /**
- * @callback waibuOnResponseHandler
+ * @callback onResponseHandler
  * @memberof module:Hook
  * @async
  * @param {object} req - The request object
@@ -120,11 +125,11 @@ const waibuOnRequest = {
 /**
  * Hook object for the 'waibu:onResponse' event. The handler is invoked when a response is sent and logs the response details, including the method, URL, status code, and elapsed time.
  *
- * @type {TBajoHook}
+ * @type {external:THook}
  * @memberof module:Hook
  * @property {number} [level=5] - The level of the hook
  * @property {string} [name='waibu:onResponse'] - The name of the hook
- * @property {waibuOnResponseHandler} handler - The handler function for the hook
+ * @property {onResponseHandler} handler - The handler function for the hook
  * @name waibu:onResponse
  */
 const waibuOnResponse = {
@@ -171,11 +176,11 @@ const waibuOnResponse = {
 /**
  * Hook object for the 'waibu:preParsing' event. The handler is invoked before parsing the request and attaches internationalization (i18n) support to the request and reply objects.
  *
- * @type {TBajoHook}
+ * @type {external:THook}
  * @memberof module:Hook
  * @property {number} [level=9] - The level of the hook
  * @property {string} [name='waibu:preParsing'] - The name of the hook
- * @property {waibuPreParsingHandler} handler - The handler function for the hook
+ * @property {onPreParsingHandler} handler - The handler function for the hook
  * @name waibu:preParsing
  */
 const waibuPreParsing = {
@@ -191,18 +196,18 @@ const waibuPreParsing = {
 /**
  * @async
  * @memberof module:Hook
- * @callback waibuOnRouteHandler
+ * @callback onRouteHandler
  * @param {object} options - The route options object
  */
 
 /**
  * Hook object for the 'waibu:onRoute' event. The handler is invoked when a new route is registered and adds the route options to the list of routes.
  *
- * @type {TBajoHook}
+ * @type {external:THook}
  * @memberof module:Hook
  * @property {number} [level=5] - The level of the hook
  * @property {string} [name='waibu:onRoute'] - The name of the hook
- * @property {waibuOnRouteHandler} handler - The handler function for the hook
+ * @property {onRouteHandler} handler - The handler function for the hook
  * @name waibu:onRoute
  */
 const waibuOnRoute = {
@@ -225,8 +230,7 @@ const waibuOnRoute = {
  *
  * @module Hook
  * @async
- * @returns {Promise<Array<TBajoHook>>} - The list of hooks to be registered
- * @see {@link https://ardhi.github.io/bajo/global.html#TBajoHook}
+ * @returns {Promise<Array<external:THook>>} - The list of hooks to be registered
  */
 async function hook () {
   return [waibuOnClose, waibuOnReady, waibuOnRequest, waibuOnResponse, waibuPreParsing, waibuOnRoute]

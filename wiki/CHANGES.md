@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-07-08
+
+- [2.24.0] Update on waibu boot process
+- [2.24.0] Update documentations
+
 ## 2026-07-06
 
 - [2.23.0] Update all fastify-family packages to the latest versions

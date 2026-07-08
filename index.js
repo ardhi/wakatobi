@@ -13,7 +13,7 @@ import {
 /**
  * @typedef TEscapeChars
  * @type {Object}
- * @global
+ * @memberof Waibu
  * @property {string} &lt;=&lt;
  * @property {string} &gt;=&gt;
  * @property {string} &quot;=&quot;
@@ -59,7 +59,7 @@ async function factory (pkgName) {
       'preSerialization', 'onSend', 'onTimeout', 'onError']
 
     /**
-     * @type {TEscapeChars}
+     * @type {Waibu.TEscapeChars}
      */
     static escapeChars = {
       '<': '&lt;',
@@ -73,7 +73,7 @@ async function factory (pkgName) {
 
       /**
        * Configuration object. To override the default configuration, you can create `data/config/waibu.json`
-       * @type {TConfig}
+       * @type {Waibu.TConfig}
        */
       this.config = config
 
