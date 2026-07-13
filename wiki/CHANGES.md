@@ -1,5 +1,9 @@
 # Changes
 
+## 2026-07-13
+
+- [2.25.0] Add `forceDownload` parameter to the `helper.download()` function
+
 ## 2026-07-08
 
 - [2.24.0] Update on waibu boot process
