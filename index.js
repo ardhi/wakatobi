@@ -106,7 +106,7 @@ async function factory (pkgName) {
      * @async
      */
     init = async () => {
-      if (isString(this.config.log.disable)) this.config.log.disable = [this.config.log.disable]
+      if (isString(this.config.log.disabled)) this.config.log.disabled = [this.config.log.disabled]
       // collect route path handlers from all plugins
       this.routePathHandlers = this.routePathHandlers ?? {}
       const me = this

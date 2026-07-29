@@ -101,7 +101,7 @@ const waibuOnRequest = {
     if (this.config.log.defer) {
       this.reqLog = this.reqLog ?? {}
       this.reqLog[req.id] = msg
-    } else if (!this.config.log.disable.includes('request')) this.app[ns].log.info(msg)
+    } else if (!this.config.log.disabled.includes('req')) this.app[ns].log.info(msg)
     if (Object.keys(this.config.paramsCharMap).length === 0) return
     for (const key in req.params) {
       let val = req.params[key]
@@ -158,10 +158,10 @@ const waibuOnResponse = {
     const time = plain ? elapsed.toFixed(2) : chalk[tc](elapsed.toFixed(2))
     if (this.config.log.defer) {
       this.reqLog = this.reqLog ?? {}
-      if (this.reqLog[req.id] && !this.config.log.disable.includes('request')) this.app[ns].log.info(this.reqLog[req.id])
+      if (this.reqLog[req.id] && !this.config.log.disabled.includes('req')) this.app[ns].log.info(this.reqLog[req.id])
       delete this.reqLog[req.id]
     }
-    if (!this.config.log.disable.includes('response')) this.app[ns].log[level]('httpResp%s%s%s%s%s', arrow, method, url, state, time)
+    if (!this.config.log.disabled.includes('reply')) this.app[ns].log[level]('httpResp%s%s%s%s%s', arrow, method, url, state, time)
   }
 }
 

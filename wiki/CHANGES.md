@@ -1,5 +1,9 @@
 # Changes
 
+## 2026-07-29
+
+- [2.26.0] Change in `config.log.disabled` to accept array of values: `req` and `reply`. Defaults to empty values
+
 ## 2026-07-26
 
 - [2.25.1] Bug fix in `helper.download()` function
