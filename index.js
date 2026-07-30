@@ -587,6 +587,15 @@ async function factory (pkgName) {
       return result
     }
 
+    buildSetting = (key, opts = {}) => {
+      const items = get(opts, `req.site.setting.${key}`, {})
+      for (const k in items) {
+        opts[k] = get(opts, k, items[k])
+      }
+      delete opts.req
+      return opts
+    }
+
     // private methods, for internal use only
     // should be marked as private (???)
 

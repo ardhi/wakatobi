@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-07-30
+
+- [2.27.0] Add `buildSetting()` to build setting from `req.site.setting` and merge it with options
+- [2.27.0] Bug fix in `webapp.attachIntl()`
+
 ## 2026-07-29
 
 - [2.26.0] Change in `config.log.disabled` to accept array of values: `req` and `reply`. Defaults to empty values
