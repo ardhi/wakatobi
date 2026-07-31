@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-07-31
+
+- [2.28.0] Add test suite
+- [2.28.0] Add hook `waibu:checkMenuItemOnBuildPagesMenu` to check menu item on building pages menu
+
 ## 2026-07-30
 
 - [2.27.0] Add `buildSetting()` to build setting from `req.site.setting` and merge it with options
