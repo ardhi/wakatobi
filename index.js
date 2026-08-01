@@ -195,6 +195,37 @@ async function factory (pkgName) {
       })
     }
 
+    /**
+     * Gather all paths to check for a request
+     * @method
+     * @param {Object} req - The request object
+     * @returns {Array} - An array of paths to check
+     */
+    pathsToCheck = (req) => {
+      const { isSet } = this.app.lib.aneka
+      const { uniq, without } = this.app.lib._
+      const items = [req.routeOptions.url, req.url].filter(url => isSet(url)).map(url => url.split('?')[0].split('#')[0])
+      return uniq(without(items, undefined, null))
+    }
+
+    /**
+     * Check the route for a request. If the route is disabled, it will throw a '_notFound' error, which will be handled
+     * by the error handler to return a 404 response.
+     * @async
+     * @method
+     * @param {Object} req - The request object
+     * @param {Array} [routes=[]] - An array of routes to check against. If not provided, it will be set by req object.
+     * @returns {Promise<void>} A promise that resolves when the route is checked
+     */
+    checkRoute = async (req, routes = []) => {
+      const { outmatch } = this.app.lib
+      const disabledRoutes = req.getSetting('waibu:route.disabled', []).map(item => this.routePath(item, false))
+      if (disabledRoutes.length === 0) return
+      const isMatch = outmatch(disabledRoutes)
+      const paths = routes.length === 0 ? this.pathsToCheck(req) : routes.map(item => this.routePath(item, false))
+      if (paths.find(isMatch)) throw this.error('_notFound')
+    }
+
     get escapeChars () {
       return this.constructor.escapeChars
     }

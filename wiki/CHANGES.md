@@ -1,5 +1,9 @@
 # Changes
 
+## 2026-08-01
+
+- [2.29.0] Add `pathsToCheck()` and `checkRoute()` moved from `sumba`
+
 ## 2026-07-31
 
 - [2.28.0] Add test suite
