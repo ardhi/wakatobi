@@ -5,10 +5,7 @@ import config from './lib/config.js'
 import sensible from '@fastify/sensible'
 import underPressure from '@fastify/under-pressure'
 import queryString from 'query-string'
-import {
-  notFound, interceptor, writeHtml, redirect, collectWebApps,
-  decorate, download
-} from './lib/helper.js'
+import { notFound, interceptor, writeHtml, redirect, collectWebApps, decorate } from './lib/helper.js'
 
 /**
  * @typedef TEscapeChars
@@ -30,7 +27,6 @@ import {
  */
 async function factory (pkgName) {
   const me = this
-  const { fs } = this.app.lib
   const { get, pick, findIndex, orderBy, isArray, isEmpty, isString } = this.app.lib._
   const { defaultsDeep, isSet } = this.app.lib.aneka
   const { eachPlugins } = this.app.bajo
@@ -154,8 +150,6 @@ async function factory (pkgName) {
       await routeHook.call(this, this.ns)
       await this._runWebApps()
       await this._handleHome()
-      await this._handleFavicon()
-      await this._handleRobotsTxt()
       await this._handleNotFound()
       await this.instance.listen(cfg.server)
       if (cfg.route.print) this._printRoutes()
@@ -629,72 +623,6 @@ async function factory (pkgName) {
 
     // private methods, for internal use only
     // should be marked as private (???)
-
-    /**
-     * Create route for '/robots.txt'.
-     *
-     * Location of robots.txt file can be found in:
-     * 1. main plugin's file; if not found, then
-     * 2. site attachment; if not found, then
-     * 3. default plugin's file
-     *
-     * @async
-     * @method
-     * @returns {Promise<void>}
-     */
-    _handleRobotsTxt = async () => {
-      if (!this.config.robotsTxt) return
-      const me = this
-      this.instance.get('/robots.txt', async function (req, reply) {
-        // 1. main robots.txt
-        let file = me.app.getPluginFile('main:/robots.txt')
-        // 2. site attachment
-        if (!fs.existsSync(file) && me.app.dobo) {
-          const dir = me.app.getPluginDataDir('dobo')
-          file = `${dir}/attachment/SumbaSite/${get(req, 'site.id')}/file/robots.txt`
-        }
-        // 3. Default
-        if (!fs.existsSync(file)) file = me.app.getPluginFile('waibu:/asset/robots.txt')
-        reply.header('cache-control', 'max-age=86400')
-        return await download.call(me, file, req, reply)
-      })
-    }
-
-    /**
-     * Create route for '/favicon.:ext'
-     *
-     * Location of favicon file can be found in:
-     * 1. main plugin's file; if not found, then
-     * 2. site attachment; if not found, then
-     * 3. static dir of theme; if not found, then
-     * 4. default plugin's file
-     *
-     * @async
-     * @method
-     * @returns {Promise<void>}
-     */
-    _handleFavicon = async () => {
-      if (!this.config.favicon) return
-      const me = this
-      this.instance.get('/favicon.:ext', async function (req, reply) {
-        // 1. main favicon
-        let file = me.app.getPluginFile(`main:/favicon.${req.params.ext}`)
-        // 2. site attachment
-        if (!fs.existsSync(file) && me.app.dobo) {
-          const dir = me.app.getPluginDataDir('dobo')
-          file = `${dir}/attachment/SumbaSite/${get(req, 'site.id')}/file/favicon.${req.params.ext}`
-        }
-        // 3. static dir of theme
-        if (!fs.existsSync(file) && me.app.waibuMpa) {
-          const theme = me.app.waibuMpa.themes.find(item => item.name === get(req, 'theme'))
-          if (theme) file = `${theme.plugin.dir.pkg}/extend/waibuStatic/asset/favicon.${req.params.ext}`
-        }
-        // 4. Default
-        if (!fs.existsSync(file)) file = me.app.getPluginFile('waibu:/asset/favicon.png')
-        reply.header('cache-control', 'max-age=86400')
-        return await download.call(me, file, req, reply)
-      })
-    }
 
     /**
      * Create route for '/' to redirect to home path.

@@ -1,5 +1,9 @@
 # Changes
 
+## 2026-08-03
+
+- [2.30.0] Move favicon & robots.txt handling to `waibu-mpa` package
+
 ## 2026-08-01
 
 - [2.29.0] Add `pathsToCheck()` and `checkRoute()` moved from `sumba`
