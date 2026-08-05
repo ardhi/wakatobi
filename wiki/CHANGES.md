@@ -1,5 +1,9 @@
 # Changes
 
+## 2026-08-05
+
+- [2.30.1] Bug fix in `helper.download()`
+
 ## 2026-08-03
 
 - [2.30.0] Move favicon & robots.txt handling to `waibu-mpa` package
