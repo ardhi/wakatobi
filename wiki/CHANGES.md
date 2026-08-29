@@ -1,5 +1,13 @@
 # Changes
 
+## 2026-08-30
+
+- [2.31.0] Add `config.server.disabled` defaults to `false` to disable the web server
+
+## 2026-08-05
+
+- [2.30.1] Bug fix in `helper.download()`
+
 ## 2026-08-05
 
 - [2.30.1] Bug fix in `helper.download()`

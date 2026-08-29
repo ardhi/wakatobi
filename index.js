@@ -127,6 +127,7 @@ async function factory (pkgName) {
       const { runHook } = this.app.bajo
       const { generateId } = this.app.lib.aneka
       const cfg = this.getConfig()
+      if (cfg.server.disabled) return
       if (this.app.bajoLogger) {
         cfg.factory.loggerInstance = this.app.bajoLogger.instance.child(
           {},
